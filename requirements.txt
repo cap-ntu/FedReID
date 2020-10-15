@@ -1,0 +1,16 @@
+cycler==0.10.0
+future==0.18.2
+kiwisolver==1.2.0
+matplotlib==3.2.1
+munch==2.5.0
+numpy==1.18.4
+Pillow==7.1.2
+pretrainedmodels==0.7.4
+pyparsing==2.4.7
+python-dateutil==2.8.1
+PyYAML==5.3.1
+scipy==1.4.1
+six==1.14.0
+torch==1.5.0
+torchvision==0.6.0
+tqdm==4.46.0
