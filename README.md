@@ -1,7 +1,7 @@
 # FedReID
-Code for ACMMM 2020 oral paper - **Performance Optimization for Federated Person Re-identification via Benchmark Analysis**
+Code for ACMMM 2020 oral paper - **[Performance Optimization for Federated Person Re-identification via Benchmark Analysis](https://dl.acm.org/doi/10.1145/3394171.3413814)**
 
-Personal re-identification is an important computer vision task, but its development is constrained by the increasing privacy concerns. Federated learning is a privacy-preserving machine learning technique that learns a shared model across decentralized clients. In this work, we implement federated learning to person re-identification (FedReID) and optimize its performance affected by statistical heterogeneity in the real-world scenario. 
+Personal re-identification is an important computer vision task, but its development is constrained by the increasing privacy concerns. Federated learning is a privacy-preserving machine learning technique that learns a shared model across decentralized clients. In this work, we implement federated learning to person re-identification (**FedReID**) and optimize its performance affected by **statistical heterogeneity** in the real-world scenario. 
 
 Algorithm: Federated Partial Averaging (FedPav)
 
@@ -85,3 +85,8 @@ Remember to save the log file for later use!
     series = {MM '20}
 }
 ```
+
+## Maintainers
+* Weiming Zhuang, Nanyang Technological University. [:octocat:](https://github.com/weimingwill)
+* Xin Gan, Nanyang Technological University. [:octocat:](https://github.com/codergan)
+* Daiying Yin, Nanyang Technological University. (Contributor)
