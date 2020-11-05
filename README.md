@@ -26,7 +26,7 @@ Dataset folder structure after preprocessing is provided [here](data_preprocess/
 You can follow the following steps to preprocess datasets:
 
 1. Download all datasets to `data_preprocess/data` folder. 
-2. We provide the Json files for spliting the small datasets.
+2. We provide the Json files for spliting the small datasets. (We haven't officially release the `split.json` files. Please send an email with short introduction to request for them.)
 3. Run the following script to prepare all datasets:
     ```
     python prepare_all_datasets.py
