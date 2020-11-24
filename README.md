@@ -68,21 +68,12 @@ Remember to save the log file for later use!
     
 ## Citation
 ```
-@inproceedings{zhuang2020fedreid,
-    author = {Zhuang, Weiming and Wen, Yonggang and Zhang, Xuesen and Gan, Xin and Yin, Daiying and Zhou, Dongzhan and Zhang, Shuai and Yi, Shuai},
-    title = {Performance Optimization of Federated Person Re-Identification via Benchmark Analysis},
-    year = {2020},
-    isbn = {9781450379885},
-    publisher = {Association for Computing Machinery},
-    address = {New York, NY, USA},
-    url = {https://doi.org/10.1145/3394171.3413814},
-    doi = {10.1145/3394171.3413814},
-    booktitle = {Proceedings of the 28th ACM International Conference on Multimedia},
-    pages = {955–963},
-    numpages = {9},
-    keywords = {machine learning system, computer vision, federated learning},
-    location = {Seattle, WA, USA},
-    series = {MM '20}
+@inproceedings{zhuang2020performance,
+  title={Performance Optimization of Federated Person Re-identification via Benchmark Analysis},
+  author={Zhuang, Weiming and Wen, Yonggang and Zhang, Xuesen and Gan, Xin and Yin, Daiying and Zhou, Dongzhan and Zhang, Shuai and Yi, Shuai},
+  booktitle={Proceedings of the 28th ACM International Conference on Multimedia},
+  pages={955--963},
+  year={2020}
 }
 ```
 
