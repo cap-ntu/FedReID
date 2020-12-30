@@ -13,6 +13,7 @@ import random
 import torch.optim as optim
 from torchvision import datasets
 from finch import FINCH
+from evaluate import testing_model
 
 def add_model(dst_model, src_model, dst_no_data, src_no_data):
     if dst_model is None:
@@ -80,7 +81,7 @@ class Server():
     def train(self, epoch, cdw, use_cuda):
         models = []
         loss = []
-        cos_distance_weights = []
+        # cos_distance_weights = []
         data_sizes = []
         current_client_list = random.sample(self.client_list, self.num_of_clients)
         feature_lists = []
@@ -90,6 +91,10 @@ class Server():
             loss.append(self.clients[i].get_train_loss())
             # models.append(self.clients[i].get_model())
             data_sizes.append(self.clients[i].get_data_sizes())
+
+        if (epoch + 1) % 10 == 0:
+            print("before aggregation, local testing")
+            self.test(use_cuda)
 
         for _, (inputs, targets) in enumerate(self.data.train_dataloaders['cuhk02']):
             inputs, target = inputs.to(self.device), targets.to(self.device)
@@ -150,15 +155,18 @@ class Server():
         
     def test(self, use_cuda):
         print("="*10)
-        print("Start Tesing!")
+        print("Start Testing! (Model is each client's clustering fed model)")
         print("="*10)
         print('We use the scale: %s'%self.multiple_scale)
         
         for dataset in self.data.datasets:
-            self.federated_model = self.federated_model.eval()
+            # self.federated_model = self.federated_model.eval()
+            # if use_cuda:
+            #     self.federated_model = self.federated_model.cuda()
+            self.federated_model = self.clients[dataset].get_model().eval()  # self.federated_model.eval()
             if use_cuda:
-                self.federated_model = self.federated_model.cuda()
-            
+                self.federated_model = self.clients[dataset].get_model().cuda()  # self.federated_model.cuda()
+
             with torch.no_grad():
                 gallery_feature = extract_feature(self.federated_model, self.data.test_loaders[dataset]['gallery'], self.multiple_scale)
                 query_feature = extract_feature(self.federated_model, self.data.test_loaders[dataset]['query'], self.multiple_scale)
@@ -170,17 +178,16 @@ class Server():
                 'query_f': query_feature.numpy(),
                 'query_label': self.data.query_meta[dataset]['labels'],
                 'query_cam': self.data.query_meta[dataset]['cameras']}
-
-            scipy.io.savemat(os.path.join(self.project_dir,
-                        'model',
-                        self.model_name,
-                        'pytorch_result.mat'),
-                        result)
+            file_path = os.path.join(self.project_dir,
+                                     'model',
+                                     self.model_name,
+                                     'pytorch_result_{}.mat'.format(dataset))
+            scipy.io.savemat(file_path, result)
                         
             print(self.model_name)
             print(dataset)
-
-            os.system('python evaluate.py --result_dir {} --dataset {}'.format(os.path.join(self.project_dir, 'model', self.model_name), dataset))
+            testing_model(file_path, dataset)
+            # os.system('python evaluate.py --result_dir {} --dataset {}'.format(os.path.join(self.project_dir, 'model', self.model_name), dataset))
 
     def knowledge_distillation(self, regularization):
         MSEloss = nn.MSELoss().to(self.device)

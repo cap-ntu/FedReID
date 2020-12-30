@@ -2,11 +2,11 @@ import scipy.io
 import torch
 import numpy as np
 import os
-import argparse
-parser = argparse.ArgumentParser(description='Training')
-parser.add_argument('--result_dir', default='.', type=str)
-parser.add_argument('--dataset', default='no_dataset', type=str)
-args = parser.parse_args()
+# import argparse
+# parser = argparse.ArgumentParser(description='Training')
+# parser.add_argument('--result_dir', default='.', type=str)
+# parser.add_argument('--dataset', default='no_dataset', type=str)
+# args = parser.parse_args()
 
 #######################################################################
 # Evaluate
@@ -60,32 +60,33 @@ def compute_mAP(index, good_index, junk_index):
 
     return ap, cmc
 
-######################################################################
-result = scipy.io.loadmat(args.result_dir + '/pytorch_result.mat')
 
-query_feature = torch.FloatTensor(result['query_f'])
-query_cam = result['query_cam'][0]
-query_label = result['query_label'][0]
-gallery_feature = torch.FloatTensor(result['gallery_f'])
-gallery_cam = result['gallery_cam'][0]
-gallery_label = result['gallery_label'][0]
+def testing_model(file_path, dataset):
+    result = scipy.io.loadmat(file_path)
 
-query_feature = query_feature.cuda()
-gallery_feature = gallery_feature.cuda()
+    query_feature = torch.FloatTensor(result['query_f'])
+    query_cam = result['query_cam'][0]
+    query_label = result['query_label'][0]
+    gallery_feature = torch.FloatTensor(result['gallery_f'])
+    gallery_cam = result['gallery_cam'][0]
+    gallery_label = result['gallery_label'][0]
 
-print(query_feature.shape)
-CMC = torch.IntTensor(len(gallery_label)).zero_()
-ap = 0.0
+    query_feature = query_feature.cuda()
+    gallery_feature = gallery_feature.cuda()
 
-for i in range(len(query_label)):
-    ap_tmp, CMC_tmp = evaluate(query_feature[i], query_label[i], query_cam[i], gallery_feature, gallery_label, gallery_cam)
-    if CMC_tmp[0]==-1:
-        continue
-    CMC = CMC + CMC_tmp
-    ap += ap_tmp
+    print(query_feature.shape)
+    CMC = torch.IntTensor(len(gallery_label)).zero_()
+    ap = 0.0
 
-CMC = CMC.float()
-CMC = CMC/len(query_label) #average CMC
-print(args.dataset+' Rank@1:%f Rank@5:%f Rank@10:%f mAP:%f'%(CMC[0], CMC[4], CMC[9], ap/len(query_label)))
-print('-'*15)
-print()
+    for i in range(len(query_label)):
+        ap_tmp, CMC_tmp = evaluate(query_feature[i], query_label[i], query_cam[i], gallery_feature, gallery_label, gallery_cam)
+        if CMC_tmp[0]==-1:
+            continue
+        CMC = CMC + CMC_tmp
+        ap += ap_tmp
+
+    CMC = CMC.float()
+    CMC = CMC/len(query_label) #average CMC
+    print(dataset+' Rank@1:%f Rank@5:%f Rank@10:%f mAP:%f'%(CMC[0], CMC[4], CMC[9], ap/len(query_label)))
+    print('-'*15)
+    print()
