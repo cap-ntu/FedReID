@@ -96,7 +96,7 @@ class Server():
             print("before aggregation, local testing")
             self.test(use_cuda)
 
-        for _, (inputs, targets) in enumerate(self.data.train_dataloaders['cuhk02']):
+        for _, (inputs, targets) in enumerate(self.data.train_loaders['cuhk02']):
             inputs, target = inputs.to(self.device), targets.to(self.device)
             break
         for i in current_client_list:
