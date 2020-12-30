@@ -103,10 +103,8 @@ class Data():
         self.gallery_meta = {}
         self.query_meta = {}
 
-        for test_dir in self.datasets:
-            test_dir = 'data/'+test_dir+'/pytorch'
-
-            dataset = test_dir.split('/')[1]
+        for dataset in self.datasets:
+            test_dir = os.path.join(self.data_dir, dataset, "pytorch")
             gallery_dataset = datasets.ImageFolder(os.path.join(test_dir, 'gallery'))
             query_dataset = datasets.ImageFolder(os.path.join(test_dir, 'query'))
     
