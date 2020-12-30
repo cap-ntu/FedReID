@@ -100,7 +100,7 @@ def train():
 
     dir_name = os.path.join(args.project_dir, 'model', args.model_name)
     if not os.path.isdir(dir_name):
-        os.mkdir(dir_name)
+        os.makedirs(dir_name)
 
     print("=====training start!========")
     rounds = 800
