@@ -31,3 +31,13 @@ class Optimization():
         if regularization:
             result = F.normalize(result, dim=1, p=2)
         return result
+
+    def generate_custom_data_feature(self, model, inputs):
+        with torch.no_grad():
+            out = model(inputs)
+        features = []
+        for i in out:
+            features.append(i)
+        features = torch.cat(features, 0)
+        return features
+

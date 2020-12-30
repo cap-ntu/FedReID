@@ -106,6 +106,9 @@ class Client():
     def generate_soft_label(self, x, regularization):
         return self.optimization.kd_generate_soft_label(self.model, x, regularization)
 
+    def generate_custom_data_feature(self, inputs):
+        return self.optimization.generate_custom_data_feature(self.model, inputs)
+
     def get_model(self):
         return self.model
 
@@ -117,3 +120,7 @@ class Client():
 
     def get_cos_distance_weight(self):
         return self.distance
+
+    def set_model(self, model):
+        self.model = copy.deepcopy(model)
+

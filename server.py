@@ -7,10 +7,12 @@ import torch.nn as nn
 import torch
 import scipy.io
 import copy
+import numpy as np
 from data_utils import ImageDataset
 import random
 import torch.optim as optim
 from torchvision import datasets
+from finch import FINCH
 
 def add_model(dst_model, src_model, dst_no_data, src_no_data):
     if dst_model is None:
@@ -81,12 +83,24 @@ class Server():
         cos_distance_weights = []
         data_sizes = []
         current_client_list = random.sample(self.client_list, self.num_of_clients)
+        feature_lists = []
         for i in current_client_list:
             self.clients[i].train(self.federated_model, use_cuda)
-            cos_distance_weights.append(self.clients[i].get_cos_distance_weight())
+            # cos_distance_weights.append(self.clients[i].get_cos_distance_weight())
             loss.append(self.clients[i].get_train_loss())
-            models.append(self.clients[i].get_model())
+            # models.append(self.clients[i].get_model())
             data_sizes.append(self.clients[i].get_data_sizes())
+
+        for _, (inputs, targets) in enumerate(self.data.train_dataloaders['cuhk02']):
+            inputs, target = inputs.to(self.device), targets.to(self.device)
+            break
+        for i in current_client_list:
+            feature_lists.append(self.clients[i].generate_custom_data_feature(inputs).cpu().detach().numpy())
+        feature_lists = np.array(feature_lists)
+        c, num_clust, _ = FINCH(feature_lists)
+        id_groups = self.clustering(c, current_client_list)
+        print("id_groups", id_groups)
+
 
         if epoch==0:
             self.L0 = torch.Tensor(loss) 
@@ -97,16 +111,31 @@ class Server():
         print("number of clients used:", len(models))
         print('Train Epoch: {}, AVG Train Loss among clients of lost epoch: {:.6f}'.format(epoch, avg_loss))
         print()
-        
-        self.train_loss.append(avg_loss)
-        
-        weights = data_sizes
-        
-        if cdw:
-            print("cos distance weights:", cos_distance_weights)
-            weights = cos_distance_weights
 
-        self.federated_model = aggregate_models(models, weights)
+        self.train_loss.append(avg_loss)
+
+        for i in id_groups.keys():
+            models = []
+            data_num = []
+            cos_distance = []
+            for j in id_groups[i]:
+                models.append(self.clients[j].get_model())
+                data_num.append(self.clients[j].get_data_num())
+                cos_distance.append(self.clients[i].get_cos_distance_weight())
+            if cdw:
+                federated_model = aggregate_models(models, cos_distance)
+            else:
+                federated_model = aggregate_models(models, data_num)
+            for j in id_groups[i]:
+                self.clients[j].set_model(federated_model)
+
+        # weights = data_sizes
+        #
+        # if cdw:
+        #     print("cos distance weights:", cos_distance_weights)
+        #     weights = cos_distance_weights
+        #
+        # self.federated_model = aggregate_models(models, weights)
 
     def draw_curve(self):
         plt.figure()
@@ -175,3 +204,14 @@ class Server():
             loss.backward()
             optimizer.step()
             print("train_loss_fine_tuning", loss.data)
+
+    def clustering(self, indexs, client_list):
+        id_groups = {}  # dict.fromkeys([i for i in range(num_of_cluster[0])],[])
+        assert len(indexs) == len(client_list)
+        for i in range(len(client_list)):
+            if indexs[i][0] not in id_groups.keys():
+                id_groups[indexs[i][0]] = [client_list[i]]
+            else:
+                id_groups[indexs[i][0]].append(client_list[i])
+        return id_groups
+
