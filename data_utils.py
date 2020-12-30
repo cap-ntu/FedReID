@@ -15,7 +15,7 @@ class ImageDataset(Dataset):
         return len(self.imgs)
 
     def __getitem__(self, index):
-        data,label = self.imgs[index]
+        data, label = self.imgs[index]
         return self.transform(Image.open(data)), label
 
 
@@ -95,6 +95,9 @@ class Data():
             
         print('Train dataset sizes:', self.train_dataset_sizes)
         print('Train class sizes:', self.train_class_sizes)
+        if "cuhk02" in self.datasets:
+            #cuhk02 is not labeled, we only use it for feature extraction in clustering
+            self.datasets.remove("cuhk02")
         
     def preprocess_test(self):
         """preprocess testing data, constructing test loaders

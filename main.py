@@ -33,7 +33,7 @@ parser.add_argument('--gpu_ids',default='0', type=str,help='gpu_ids: e.g. 0  0,1
 parser.add_argument('--model_name',default='ft_ResNet50', type=str, help='output model name')
 parser.add_argument('--project_dir',default='.', type=str, help='project path')
 parser.add_argument('--data_dir',default='data',type=str, help='training dir path')
-parser.add_argument('--datasets',default='Market,DukeMTMC-reID,cuhk03-np-detected,cuhk01,MSMT17,viper,prid,3dpes,ilids',type=str, help='datasets used')
+parser.add_argument('--datasets',default='Market,DukeMTMC-reID,cuhk03-np-detected,cuhk01,MSMT17,viper,prid,3dpes,ilids,cuhk02',type=str, help='datasets used')
 parser.add_argument('--train_all', action='store_true', help='use all training data' )
 parser.add_argument('--stride', default=2, type=int, help='stride')
 parser.add_argument('--lr', default=0.05, type=float, help='learning rate')
@@ -71,7 +71,7 @@ def train():
 
     data = Data(args.datasets, args.data_dir, args.batch_size, args.erasing_p, args.color_jitter, args.train_all)
     data.preprocess()
-    
+
     clients = {}
     for cid in data.client_list:
         clients[cid] = Client(
@@ -111,7 +111,7 @@ def train():
         server.train(i, args.cdw, use_cuda)
         save_path = os.path.join(dir_name, 'federated_model.pth')
         torch.save(server.federated_model.cpu().state_dict(), save_path)
-        if (i+1)%10 == 0:
+        if (i+1) % 10 == 0:
             server.test(use_cuda)
             if args.kd:
                 server.knowledge_distillation(args.regularization)
