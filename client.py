@@ -39,7 +39,7 @@ class Client():
         self.model = self.model.to(self.device)
 
         optimizer = get_optimizer(self.model, self.lr)
-        scheduler = lr_scheduler.StepLR(optimizer, step_size=40, gamma=0.1)
+        # scheduler = lr_scheduler.StepLR(optimizer, step_size=40, gamma=0.1)
         
         criterion = nn.CrossEntropyLoss()
 
@@ -50,7 +50,7 @@ class Client():
             print('Epoch {}/{}'.format(epoch, self.local_epoch - 1))
             print('-' * 10)
 
-            scheduler.step()
+            # scheduler.step()
             self.model.train(True)
             running_loss = 0.0
             running_corrects = 0.0
