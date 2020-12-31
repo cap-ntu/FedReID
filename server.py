@@ -125,7 +125,7 @@ class Server():
             cos_distance = []
             for j in id_groups[i]:
                 models.append(self.clients[j].get_model())
-                data_num.append(self.clients[j].get_data_num())
+                data_num.append(self.clients[j].get_data_sizes())
                 cos_distance.append(self.clients[i].get_cos_distance_weight())
             if cdw:
                 federated_model = aggregate_models(models, cos_distance)
