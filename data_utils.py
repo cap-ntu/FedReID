@@ -98,6 +98,7 @@ class Data():
         if "cuhk02" in self.datasets:
             #cuhk02 is not labeled, we only use it for feature extraction in clustering
             self.datasets.remove("cuhk02")
+            self.client_list.remove("cuhk02")
         
     def preprocess_test(self):
         """preprocess testing data, constructing test loaders
