@@ -111,8 +111,9 @@ def train():
         print("Round Number {}".format(i))
         print('='*10)
         server.train(i, args.cdw, use_cuda)
-        save_path = os.path.join(dir_name, 'federated_model.pth')
-        torch.save(server.federated_model.cpu().state_dict(), save_path)
+        if not args.clustering:
+            save_path = os.path.join(dir_name, 'federated_model.pth')
+            torch.save(server.federated_model.cpu().state_dict(), save_path)
         if (i+1) % 10 == 0:
             server.test(use_cuda)
             if args.kd:
