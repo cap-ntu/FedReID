@@ -119,7 +119,7 @@ class Server():
         avg_loss = sum(loss) / self.num_of_clients
 
         print("==============================")
-        print("number of clients used:", len(models))
+        # print("number of clients used:", len(models))
         print('Train Epoch: {}, AVG Train Loss among clients of lost epoch: {:.6f}'.format(epoch, avg_loss))
         print()
 
