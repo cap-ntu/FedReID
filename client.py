@@ -36,6 +36,7 @@ class Client():
         if self.use_clustering:
             print("using clustering, model is set before")
             assert federated_model is None
+            federated_model = copy.deepcopy(self.model)
         else:
             self.model.load_state_dict(federated_model.state_dict())
         self.model.classifier.classifier = self.classifier
