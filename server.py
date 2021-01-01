@@ -89,13 +89,13 @@ class Server():
         current_client_list = random.sample(self.client_list, self.num_of_clients)
         feature_lists = []
         for i in current_client_list:
-            loss.append(self.clients[i].get_train_loss())
             if not self.use_clustering:
                 self.clients[i].train(self.federated_model, use_cuda)
                 cos_distance_weights.append(self.clients[i].get_cos_distance_weight())
                 models.append(self.clients[i].get_model())
             else:
                 self.clients[i].train(None, use_cuda=use_cuda)
+            loss.append(self.clients[i].get_train_loss())
             data_sizes.append(self.clients[i].get_data_sizes())
 
         if (epoch + 1) % 10 == 0:
