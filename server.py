@@ -80,17 +80,22 @@ class Server():
 
 
     def train(self, epoch, cdw, use_cuda):
-        models = []
+
         loss = []
-        cos_distance_weights = []
+        if not self.use_clustering:
+            models = []
+            cos_distance_weights = []
         data_sizes = []
         current_client_list = random.sample(self.client_list, self.num_of_clients)
         feature_lists = []
         for i in current_client_list:
-            self.clients[i].train(self.federated_model, use_cuda)
-            cos_distance_weights.append(self.clients[i].get_cos_distance_weight())
             loss.append(self.clients[i].get_train_loss())
-            # models.append(self.clients[i].get_model())
+            if not self.use_clustering:
+                self.clients[i].train(self.federated_model, use_cuda)
+                cos_distance_weights.append(self.clients[i].get_cos_distance_weight())
+                models.append(self.clients[i].get_model())
+            else:
+                self.clients[i].train(None, use_cuda=use_cuda)
             data_sizes.append(self.clients[i].get_data_sizes())
 
         if (epoch + 1) % 10 == 0:
@@ -134,9 +139,9 @@ class Server():
                     federated_model = aggregate_models(models, data_num)
                 for j in id_groups[i]:
                     self.clients[j].set_model(federated_model)
+            print("using clustering, client models set")
         else:
             weights = data_sizes
-
             if cdw:
                 print("cos distance weights:", cos_distance_weights)
                 weights = cos_distance_weights
@@ -156,17 +161,19 @@ class Server():
         
     def test(self, use_cuda):
         print("="*10)
-        print("Start Testing! (Model is each client's clustering fed model)")
+        print("Start Testing！")
         print("="*10)
         print('We use the scale: %s'%self.multiple_scale)
         
         for dataset in self.data.datasets:
-            # self.federated_model = self.federated_model.eval()
-            # if use_cuda:
-            #     self.federated_model = self.federated_model.cuda()
+            # if self.use_clustering:
             self.federated_model = self.clients[dataset].get_model().eval()  # self.federated_model.eval()
             if use_cuda:
                 self.federated_model = self.clients[dataset].get_model().cuda()  # self.federated_model.cuda()
+            # else:
+            #     self.federated_model = self.federated_model.eval()
+            #     if use_cuda:
+            #         self.federated_model = self.federated_model.cuda()
 
             with torch.no_grad():
                 gallery_feature = extract_feature(self.federated_model, self.data.test_loaders[dataset]['gallery'], self.multiple_scale)

@@ -8,7 +8,7 @@ from torch.autograd import Variable
 import copy
 from optimization import Optimization
 class Client():
-    def __init__(self, cid, data, device, project_dir, model_name, local_epoch, lr, batch_size, drop_rate, stride):
+    def __init__(self, cid, data, device, project_dir, model_name, local_epoch, lr, batch_size, drop_rate, stride, clustering=False):
         self.cid = cid
         self.project_dir = project_dir
         self.model_name = model_name
@@ -27,13 +27,17 @@ class Client():
         self.model = self.full_model
         self.distance=0
         self.optimization = Optimization(self.train_loader, self.device)
+        self.use_clustering = clustering
         # print("class name size",class_names_size[cid])
 
-    def train(self, federated_model, use_cuda):
+    def train(self, federated_model=None, use_cuda=False):
         self.y_err = []
         self.y_loss = []
-
-        self.model.load_state_dict(federated_model.state_dict())
+        if self.use_clustering:
+            print("using clustering, model is set before")
+            assert federated_model is None
+        else:
+            self.model.load_state_dict(federated_model.state_dict())
         self.model.classifier.classifier = self.classifier
         self.old_classifier = copy.deepcopy(self.classifier)
         self.model = self.model.to(self.device)

@@ -84,7 +84,8 @@ def train():
             args.lr, 
             args.batch_size, 
             args.drop_rate, 
-            args.stride) 
+            args.stride,
+            args.clustering)
 
     server = Server(
         clients, 
