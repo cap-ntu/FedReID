@@ -21,11 +21,10 @@ class Client():
         self.dataset_sizes = self.data.train_dataset_sizes[cid]
         self.train_loader = self.data.train_loaders[cid]
 
-        self.full_model = get_model(self.data.train_class_sizes[cid], drop_rate, stride)
-        self.classifier = self.full_model.classifier.classifier
-        self.full_model.classifier.classifier = nn.Sequential()
-        self.model = self.full_model
-        self.distance=0
+        self.model = get_model(self.data.train_class_sizes[cid], drop_rate, stride)
+        self.classifier = copy.deepcopy(self.model.classifier.classifier)
+        self.model.classifier.classifier = nn.Sequential()
+        self.distance = 0
         self.optimization = Optimization(self.train_loader, self.device)
         self.use_clustering = clustering
         # print("class name size",class_names_size[cid])
@@ -37,6 +36,7 @@ class Client():
             print("using clustering, model is set before")
             assert federated_model is None
             federated_model = copy.deepcopy(self.model)
+            assert self.model.classifier.classifier == nn.Sequential()
         else:
             self.model.load_state_dict(federated_model.state_dict())
         self.model.classifier.classifier = self.classifier

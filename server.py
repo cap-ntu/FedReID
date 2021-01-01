@@ -71,9 +71,8 @@ class Server():
         for s in multiple_scale.split(','):
             self.multiple_scale.append(math.sqrt(float(s)))
 
-        self.full_model = get_model(750, drop_rate, stride).to(device)
-        self.full_model.classifier.classifier = nn.Sequential()
-        self.federated_model=self.full_model
+        self.federated_model = get_model(750, drop_rate, stride).to(device)
+        self.federated_model.classifier.classifier = nn.Sequential()
         self.federated_model.eval()
         self.train_loss = []
         self.use_clustering = clustering
