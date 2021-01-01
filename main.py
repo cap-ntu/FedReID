@@ -58,7 +58,7 @@ parser.add_argument('--test_dir',default='all',type=str, help='./test_data')
 parser.add_argument('--cdw', action='store_true', help='use cosine distance weight for model aggregation, default false' )
 parser.add_argument('--kd', action='store_true', help='apply knowledge distillation, default false' )
 parser.add_argument('--regularization', action='store_true', help='use regularization during distillation, default false' )
-
+parser.add_argument('--clustering', action='store_true', help='use clustering to aggregate models, fault false' )
 
 def train():
     args = parser.parse_args()
@@ -96,7 +96,8 @@ def train():
         args.lr, 
         args.drop_rate, 
         args.stride, 
-        args.multiple_scale)
+        args.multiple_scale,
+        args.clustering)
 
     dir_name = os.path.join(args.project_dir, 'model', args.model_name)
     if not os.path.isdir(dir_name):

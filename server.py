@@ -54,7 +54,7 @@ def aggregate_models(models, weights):
 
 
 class Server():
-    def __init__(self, clients, data, device, project_dir, model_name, num_of_clients, lr, drop_rate, stride, multiple_scale):
+    def __init__(self, clients, data, device, project_dir, model_name, num_of_clients, lr, drop_rate, stride, multiple_scale, clustering=False):
         self.project_dir = project_dir
         self.data = data
         self.device = device
@@ -76,18 +76,19 @@ class Server():
         self.federated_model=self.full_model
         self.federated_model.eval()
         self.train_loss = []
+        self.use_clustering = clustering
 
 
     def train(self, epoch, cdw, use_cuda):
         models = []
         loss = []
-        # cos_distance_weights = []
+        cos_distance_weights = []
         data_sizes = []
         current_client_list = random.sample(self.client_list, self.num_of_clients)
         feature_lists = []
         for i in current_client_list:
             self.clients[i].train(self.federated_model, use_cuda)
-            # cos_distance_weights.append(self.clients[i].get_cos_distance_weight())
+            cos_distance_weights.append(self.clients[i].get_cos_distance_weight())
             loss.append(self.clients[i].get_train_loss())
             # models.append(self.clients[i].get_model())
             data_sizes.append(self.clients[i].get_data_sizes())
@@ -95,16 +96,16 @@ class Server():
         if (epoch + 1) % 10 == 0:
             print("before aggregation, local testing")
             self.test(use_cuda)
-
-        for _, (inputs, targets) in enumerate(self.data.train_loaders['cuhk02']):
-            inputs, target = inputs.to(self.device), targets.to(self.device)
-            break
-        for i in current_client_list:
-            feature_lists.append(self.clients[i].generate_custom_data_feature(inputs).cpu().detach().numpy())
-        feature_lists = np.array(feature_lists)
-        c, num_clust, _ = FINCH(feature_lists)
-        id_groups = self.clustering(c, current_client_list)
-        print("id_groups", id_groups)
+        if self.use_clustering:
+            for _, (inputs, targets) in enumerate(self.data.train_loaders['cuhk02']):
+                inputs, target = inputs.to(self.device), targets.to(self.device)
+                break
+            for i in current_client_list:
+                feature_lists.append(self.clients[i].generate_custom_data_feature(inputs).cpu().detach().numpy())
+            feature_lists = np.array(feature_lists)
+            c, num_clust, _ = FINCH(feature_lists)
+            id_groups = self.clustering(c, current_client_list)
+            print("id_groups", id_groups)
 
 
         if epoch==0:
@@ -118,29 +119,29 @@ class Server():
         print()
 
         self.train_loss.append(avg_loss)
+        if self.use_clustering:
+            for i in id_groups.keys():
+                models = []
+                data_num = []
+                cos_distance = []
+                for j in id_groups[i]:
+                    models.append(self.clients[j].get_model())
+                    data_num.append(self.clients[j].get_data_sizes())
+                    cos_distance.append(self.clients[j].get_cos_distance_weight())
+                if cdw:
+                    federated_model = aggregate_models(models, cos_distance)
+                else:
+                    federated_model = aggregate_models(models, data_num)
+                for j in id_groups[i]:
+                    self.clients[j].set_model(federated_model)
+        else:
+            weights = data_sizes
 
-        for i in id_groups.keys():
-            models = []
-            data_num = []
-            cos_distance = []
-            for j in id_groups[i]:
-                models.append(self.clients[j].get_model())
-                data_num.append(self.clients[j].get_data_sizes())
-                cos_distance.append(self.clients[j].get_cos_distance_weight())
             if cdw:
-                federated_model = aggregate_models(models, cos_distance)
-            else:
-                federated_model = aggregate_models(models, data_num)
-            for j in id_groups[i]:
-                self.clients[j].set_model(federated_model)
+                print("cos distance weights:", cos_distance_weights)
+                weights = cos_distance_weights
 
-        # weights = data_sizes
-        #
-        # if cdw:
-        #     print("cos distance weights:", cos_distance_weights)
-        #     weights = cos_distance_weights
-        #
-        # self.federated_model = aggregate_models(models, weights)
+            self.federated_model = aggregate_models(models, weights)
 
     def draw_curve(self):
         plt.figure()
