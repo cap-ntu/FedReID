@@ -158,17 +158,22 @@ class Server():
         plt.savefig(os.path.join(dir_name, 'train.png'))
         plt.close('all')
         
-    def test(self, use_cuda):
+    def test(self, use_cuda, use_fed=False):
         print("="*10)
         print("Start Testing！")
         print("="*10)
-        print('We use the scale: %s'%self.multiple_scale)
+        print('We use the scale: %s' % self.multiple_scale)
         
         for dataset in self.data.datasets:
             # if self.use_clustering:
-            client_model = self.clients[dataset].get_model().eval()  # self.federated_model.eval()
-            if use_cuda:
-                client_model = client_model.cuda()  # self.federated_model.cuda()
+            if use_fed and not self.use_clustering:
+                client_model = self.federated_model.eval()
+                if use_cuda:
+                    client_model = self.federated_model.cuda()
+            else:
+                client_model = self.clients[dataset].get_model().eval()  # self.federated_model.eval()
+                if use_cuda:
+                    client_model = client_model.cuda()  # self.federated_model.cuda()
             # else:
             #     self.federated_model = self.federated_model.eval()
             #     if use_cuda:
