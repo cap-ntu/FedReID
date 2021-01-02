@@ -166,17 +166,17 @@ class Server():
         
         for dataset in self.data.datasets:
             # if self.use_clustering:
-            self.federated_model = self.clients[dataset].get_model().eval()  # self.federated_model.eval()
+            client_model = self.clients[dataset].get_model().eval()  # self.federated_model.eval()
             if use_cuda:
-                self.federated_model = self.clients[dataset].get_model().cuda()  # self.federated_model.cuda()
+                client_model = client_model.cuda()  # self.federated_model.cuda()
             # else:
             #     self.federated_model = self.federated_model.eval()
             #     if use_cuda:
             #         self.federated_model = self.federated_model.cuda()
 
             with torch.no_grad():
-                gallery_feature = extract_feature(self.federated_model, self.data.test_loaders[dataset]['gallery'], self.multiple_scale)
-                query_feature = extract_feature(self.federated_model, self.data.test_loaders[dataset]['query'], self.multiple_scale)
+                gallery_feature = extract_feature(client_model, self.data.test_loaders[dataset]['gallery'], self.multiple_scale)
+                query_feature = extract_feature(client_model, self.data.test_loaders[dataset]['query'], self.multiple_scale)
 
             result = {
                 'gallery_f': gallery_feature.numpy(),
