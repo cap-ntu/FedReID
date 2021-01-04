@@ -76,6 +76,7 @@ class Server():
         self.federated_model.eval()
         self.train_loss = []
         self.use_clustering = clustering
+        self.clustering_group_for_kd = None
 
 
     def train(self, epoch, cdw, use_cuda):
@@ -139,13 +140,15 @@ class Server():
                 for j in id_groups[i]:
                     self.clients[j].set_model(federated_model)
             print("using clustering, client models set")
+            self.clustering_group_for_kd = id_groups
+
         else:
             weights = data_sizes
             if cdw:
                 print("cos distance weights:", cos_distance_weights)
                 weights = cos_distance_weights
-
             self.federated_model = aggregate_models(models, weights)
+
 
     def draw_curve(self):
         plt.figure()
@@ -167,10 +170,12 @@ class Server():
         for dataset in self.data.datasets:
             # if self.use_clustering:
             if use_fed and not self.use_clustering:
+                print("Using federated model")
                 client_model = self.federated_model.eval()
                 if use_cuda:
                     client_model = self.federated_model.cuda()
             else:
+                print("Using local model")
                 client_model = self.clients[dataset].get_model().eval()  # self.federated_model.eval()
                 if use_cuda:
                     client_model = client_model.cuda()  # self.federated_model.cuda()
@@ -202,27 +207,63 @@ class Server():
             # os.system('python evaluate.py --result_dir {} --dataset {}'.format(os.path.join(self.project_dir, 'model', self.model_name), dataset))
 
     def knowledge_distillation(self, regularization):
-        MSEloss = nn.MSELoss().to(self.device)
-        optimizer = optim.SGD(self.federated_model.parameters(), lr=self.lr*0.01, weight_decay=5e-4, momentum=0.9, nesterov=True)
-        self.federated_model.train()
+        if self.use_clustering:
+            for i in self.clustering_group_for_kd:
+                print("grouping {} for kd".format(self.clustering_group_for_kd[i]))
+                first_client_id = self.clustering_group_for_kd[i][0]
+                model = self.clients[first_client_id].get_model()
+                federated_model = self.cluster_knowledge_distillation(model,
+                                                                      self.clustering_group_for_kd[i],
+                                                                      regularization)
+                for j in self.clustering_group_for_kd[i]:
+                    self.clients[j].set_model(federated_model)
+        else:
+            MSEloss = nn.MSELoss().to(self.device)
+            optimizer = optim.SGD(self.federated_model.parameters(), lr=self.lr*0.01, weight_decay=5e-4, momentum=0.9, nesterov=True)
+            self.federated_model.train()
 
-        for _, (x, target) in enumerate(self.data.kd_loader): 
+            for _, (x, target) in enumerate(self.data.kd_loader):
+                x, target = x.to(self.device), target.to(self.device)
+                # target=target.long()
+                optimizer.zero_grad()
+                soft_target = torch.Tensor([[0]*512]*len(x)).to(self.device)
+
+                for i in self.client_list:
+                    i_label = (self.clients[i].generate_soft_label(x, regularization))
+                    soft_target += i_label
+                soft_target /= len(self.client_list)
+
+                output = self.federated_model(x)
+
+                loss = MSEloss(output, soft_target)
+                loss.backward()
+                optimizer.step()
+                print("train_loss_fine_tuning", loss.data)
+
+    def cluster_knowledge_distillation(self, model, c_list, regularization):
+        MSEloss = nn.MSELoss().to(self.device)
+        optimizer = optim.SGD(model.parameters(), lr=self.lr * 0.01, weight_decay=5e-4, momentum=0.9,
+                              nesterov=True)
+        model.train()
+
+        for _, (x, target) in enumerate(self.data.kd_loader):
             x, target = x.to(self.device), target.to(self.device)
             # target=target.long()
             optimizer.zero_grad()
-            soft_target = torch.Tensor([[0]*512]*len(x)).to(self.device)
-        
-            for i in self.client_list:
+            soft_target = torch.Tensor([[0] * 512] * len(x)).to(self.device)
+
+            for i in c_list:
                 i_label = (self.clients[i].generate_soft_label(x, regularization))
                 soft_target += i_label
             soft_target /= len(self.client_list)
-        
-            output = self.federated_model(x)
-            
+
+            output = model(x)
+
             loss = MSEloss(output, soft_target)
             loss.backward()
             optimizer.step()
-            print("train_loss_fine_tuning", loss.data)
+            print("train_loss_fine_tuning of {} is {}".format(c_list, loss.data))
+        return model
 
     def clustering(self, indexs, client_list):
         id_groups = {}  # dict.fromkeys([i for i in range(num_of_cluster[0])],[])
@@ -233,4 +274,6 @@ class Server():
             else:
                 id_groups[indexs[i][0]].append(client_list[i])
         return id_groups
+
+
 
