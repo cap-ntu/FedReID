@@ -63,13 +63,13 @@ parser.add_argument('--regularization', action='store_true', help='use regulariz
 parser.add_argument('--clustering', action='store_true', help='use clustering to aggregate models, fault false')
 
 
-def save_checkpoint(server, clients, cpk_dir, epoch):
+def save_checkpoint(server, clients, client_list,cpk_dir, epoch):
     torch.save({
         'epoch': epoch,
         'server_state_dict': server.federated_model.state_dict(),
-        'client_list': [c.cid for c in clients],
-        'client_classifier': [c.classifier.state_dict() for c in clients],
-        'client_model': [c.model.state_dict() for c in clients]
+        'client_list': [clients[c].cid for c in client_list],
+        'client_classifier': [clients[c].classifier.state_dict() for c in client_list],
+        'client_model': [clients[c].model.state_dict() for c in client_list]
     }, os.path.join(cpk_dir, "{}.pth".format(epoch)))
 
 
@@ -163,7 +163,7 @@ def train():
     print("=====training start!========")
     rounds = 800
     for i in range(epoch, rounds):
-        save_checkpoint(server, clients, cpk_dir, i)
+        save_checkpoint(server, clients, data.client_list, cpk_dir, i)
         print('='*10)
         print("Round Number {}".format(i))
         print('='*10)
