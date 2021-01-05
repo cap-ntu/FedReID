@@ -54,16 +54,64 @@ parser.add_argument('--multi', action='store_true', help='use multiple query' )
 parser.add_argument('--multiple_scale',default='1', type=str,help='multiple_scale: e.g. 1 1,1.1  1,1.1,1.2')
 parser.add_argument('--test_dir',default='all',type=str, help='./test_data')
 
+parser.add_argument('--resume_epoch', default=0, type=int, help='resume from which epoch, if 0, no resume')
+
 # arguments for optimization
 parser.add_argument('--cdw', action='store_true', help='use cosine distance weight for model aggregation, default false' )
 parser.add_argument('--kd', action='store_true', help='apply knowledge distillation, default false' )
 parser.add_argument('--regularization', action='store_true', help='use regularization during distillation, default false' )
-parser.add_argument('--clustering', action='store_true', help='use clustering to aggregate models, fault false' )
+parser.add_argument('--clustering', action='store_true', help='use clustering to aggregate models, fault false')
+
+
+def save_checkpoint(server, clients, cpk_dir, epoch):
+    torch.save({
+        'epoch': epoch,
+        'server_state_dict': server.federated_model.state_dict(),
+        'client_list': [c.cid for c in clients],
+        'client_classifier': [c.classifier.state_dict() for c in clients],
+        'client_model': [c.model.state_dict() for c in clients]
+    }, os.path.join(cpk_dir, "{}.pth".format(epoch)))
+
+
+def load_checkpoint(path):
+    cpk = torch.load(path)
+    epoch = cpk['epoch']
+    server_state_dict = cpk['server_state_dict']
+    client_list = cpk['client_list']
+    client_classifier = cpk['client_classifier']
+    client_model = cpk['client_model']
+    return epoch, server_state_dict, client_list, client_classifier, client_model
+
+
 
 def train():
     args = parser.parse_args()
     print(args)
-    
+
+    if args.clustering:
+        clu = "clu"
+    else:
+        clu = "Nclu"
+    if args.cdw:
+        cdw = "cdw"
+    else:
+        cdw = "Ncdw"
+    if args.kd:
+        kd = "kd"
+    else:
+        kd = "Nkd"
+    if args.regularization:
+        reg = "reg"
+    else:
+        reg = "Nreg"
+
+    cpk_dir = "checkpoints/{}_{}_{}_{}".format(clu, cdw, kd, reg)
+    cpk_dir = os.path.join(args.project_dir, cpk_dir)
+    if not os.path.isdir(cpk_dir):
+        os.makedirs(cpk_dir)
+
+    epoch = args.resume_epoch
+
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
@@ -100,20 +148,29 @@ def train():
         args.multiple_scale,
         args.clustering)
 
-    dir_name = os.path.join(args.project_dir, 'model', args.model_name)
-    if not os.path.isdir(dir_name):
-        os.makedirs(dir_name)
+    if epoch != 0:
+        print("======= loading checkpoint, epoch: {}".format(epoch))
+        path = os.path.join(cpk_dir, "{}.pth".format(epoch))
+        cpk_epoch, server_state_dict, client_list, client_classifier, client_model = load_checkpoint(path)
+        assert (epoch == cpk_epoch)
+        server.federated_model.load_state_dict(server_state_dict)
+        for i in range(len(client_list)):
+            cid = client_list[i]
+            clients[cid].classifier.load_state_dict(client_classifier[i])
+            clients[cid].model.load_state_dict(client_model[i])
+        print("all models loaded, training from {}".format(epoch))
 
     print("=====training start!========")
     rounds = 800
-    for i in range(rounds):
+    for i in range(epoch, rounds):
+        save_checkpoint(server, clients, cpk_dir, i)
         print('='*10)
         print("Round Number {}".format(i))
         print('='*10)
         server.train(i, args.cdw, use_cuda)
-        if not args.clustering:
-            save_path = os.path.join(dir_name, 'federated_model.pth')
-            torch.save(server.federated_model.cpu().state_dict(), save_path)
+        # if not args.clustering:
+        #     save_path = os.path.join(dir_name, 'federated_model.pth')
+        #     torch.save(server.federated_model.cpu().state_dict(), save_path)
         if (i+1) % 10 == 0:
             server.test(use_cuda, use_fed=True)
             if args.kd:
