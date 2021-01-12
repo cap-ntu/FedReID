@@ -42,7 +42,7 @@ class Client():
         self.model.classifier.classifier = self.classifier
         self.old_classifier = copy.deepcopy(self.classifier)
         self.model = self.model.to(self.device)
-
+        self.model.train(True)
         optimizer = get_optimizer(self.model, self.lr)
         # scheduler = lr_scheduler.StepLR(optimizer, step_size=40, gamma=0.1)
         
@@ -56,7 +56,6 @@ class Client():
             print('-' * 10)
 
             # scheduler.step()
-            self.model.train(True)
             running_loss = 0.0
             running_corrects = 0.0
             
@@ -65,12 +64,12 @@ class Client():
                 b, c, h, w = inputs.shape
                 if b < self.batch_size:
                     continue
-                if use_cuda:
-                    inputs = Variable(inputs.cuda().detach())
-                    labels = Variable(labels.cuda().detach())
-                else:
-                    inputs, labels = Variable(inputs), Variable(labels)
-                
+                # if use_cuda:
+                #     inputs = Variable(inputs.cuda().detach())
+                #     labels = Variable(labels.cuda().detach())
+                # else:
+                #     inputs, labels = Variable(inputs), Variable(labels)
+                inputs, labels = inputs.to(self.device), labels.to(self.device)
                 optimizer.zero_grad()
 
                 outputs = self.model(inputs)
