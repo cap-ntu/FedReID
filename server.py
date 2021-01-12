@@ -77,16 +77,20 @@ class Server():
         self.train_loss = []
         self.use_clustering = clustering
         self.clustering_group_for_kd = None
+        self.cdw = None
+        self.clients_using = None
+        self.clients_weights = None
 
 
     def train(self, epoch, cdw, use_cuda):
-
+        self.cdw = cdw
         loss = []
         if not self.use_clustering:
             models = []
             cos_distance_weights = []
         data_sizes = []
         current_client_list = random.sample(self.client_list, self.num_of_clients)
+        self.clients_using = current_client_list
         feature_lists = []
         for i in current_client_list:
             if not self.use_clustering:
@@ -206,8 +210,9 @@ class Server():
             testing_model(file_path, dataset)
             # os.system('python evaluate.py --result_dir {} --dataset {}'.format(os.path.join(self.project_dir, 'model', self.model_name), dataset))
 
-    def knowledge_distillation(self, regularization):
-        if self.use_clustering:
+    def knowledge_distillation(self, regularization, kd_method):
+        if self.use_clustering and kd_method == 'cluster':
+            print("personlaization with kd_method cluster")
             for i in self.clustering_group_for_kd:
                 print("grouping {} for kd".format(self.clustering_group_for_kd[i]))
                 first_client_id = self.clustering_group_for_kd[i][0]
@@ -217,6 +222,26 @@ class Server():
                                                                       regularization)
                 for j in self.clustering_group_for_kd[i]:
                     self.clients[j].set_model(federated_model)
+        elif self.use_clustering and kd_method == 'whole':
+            print("personlaization with kd_method whole")
+            models = []
+            cos_distance_weights = []
+            data_sizes = []
+            for i in self.clients_using:
+                cos_distance_weights.append(self.clients[i].get_cos_distance_weight())
+                models.append(self.clients[i].get_model())
+                data_sizes.append(self.clients[i].get_data_sizes())
+            weights = data_sizes
+            if self.cdw:
+                print("cos distance weights:", cos_distance_weights)
+                weights = cos_distance_weights
+            self.federated_model = aggregate_models(models, weights)
+
+            federated_model = self.cluster_knowledge_distillation(self.federated_model,
+                                                                  self.client_list,
+                                                                  regularization)
+            for j in self.client_list:
+                self.clients[j].set_model(federated_model)
         else:
             MSEloss = nn.MSELoss().to(self.device)
             optimizer = optim.SGD(self.federated_model.parameters(), lr=self.lr*0.01, weight_decay=5e-4, momentum=0.9, nesterov=True)

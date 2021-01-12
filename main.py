@@ -58,7 +58,8 @@ parser.add_argument('--resume_epoch', default=0, type=int, help='resume from whi
 
 # arguments for optimization
 parser.add_argument('--cdw', action='store_true', help='use cosine distance weight for model aggregation, default false' )
-parser.add_argument('--kd', action='store_true', help='apply knowledge distillation, default false' )
+parser.add_argument('--kd', action='store_true', help='apply knowledge distillation, default false')
+parser.add_argument('--kd_method', default='cluster', type=str, help='whole or cluster')
 parser.add_argument('--regularization', action='store_true', help='use regularization during distillation, default false' )
 parser.add_argument('--clustering', action='store_true', help='use clustering to aggregate models, fault false')
 
@@ -92,6 +93,7 @@ def train():
         clu = "clu"
     else:
         clu = "Nclu"
+
     if args.cdw:
         cdw = "cdw"
     else:
@@ -105,7 +107,10 @@ def train():
     else:
         reg = "Nreg"
 
-    cpk_dir = "checkpoints/{}_{}_{}_{}".format(clu, cdw, kd, reg)
+    kd_method = args.kd_method
+    assert (kd_method == 'whole' or kd_method == 'cluster')
+
+    cpk_dir = "checkpoints/{}_{}_{}_{}_{}".format(clu, cdw, kd, kd_method, reg)
     cpk_dir = os.path.join(args.project_dir, cpk_dir)
     if not os.path.isdir(cpk_dir):
         os.makedirs(cpk_dir)
@@ -174,7 +179,7 @@ def train():
         if (i+1) % 10 == 0:
             server.test(use_cuda, use_fed=True)
             if args.kd:
-                server.knowledge_distillation(args.regularization)
+                server.knowledge_distillation(args.regularization, kd_method)
                 server.test(use_cuda, use_fed=True)
         server.draw_curve()
 
