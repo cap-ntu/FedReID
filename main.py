@@ -64,7 +64,7 @@ parser.add_argument('--regularization', action='store_true', help='use regulariz
 parser.add_argument('--clustering', action='store_true', help='use clustering to aggregate models, fault false')
 parser.add_argument('--clustering_method', default='finch', type=str, help='method used for clustering, finch or kmeans')
 parser.add_argument('--max_distance', default=0.9, type=float, help='maximum distance in finch algorithm')
-parser.add_argument('--n_cluster', default=2, type=float, help='number of cluster in Kmeans')
+parser.add_argument('--n_cluster', default=2, type=int, help='number of cluster in Kmeans')
 
 
 def save_checkpoint(server, clients, client_list, cpk_dir, epoch):
