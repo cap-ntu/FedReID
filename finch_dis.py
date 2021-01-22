@@ -83,7 +83,7 @@ def finch(feats, finch_step, finch_dis, metric="cosine", do_normalize=True):
             clusters[pre_map[key]] = i
 
     print('Done')
-    print("final_cluster_num: {}, clusters: {}".format(len(set(clusters), clusters)))
+    print("final_cluster_num: {}, clusters: {}".format(len(set(clusters)), clusters))
 
     return clusters
 

@@ -14,7 +14,7 @@ import torch.optim as optim
 from torchvision import datasets
 # from finch import FINCH
 from finch_dis import finch
-from kmeans import keamns
+from kmeans import kmeans
 from evaluate import testing_model
 
 def add_model(dst_model, src_model, dst_no_data, src_no_data):
@@ -123,7 +123,7 @@ class Server():
             # c, num_clust, _ = FINCH(feature_lists, min_sim=self.max_dis)
             # self.clustering_method, self.max_dis, self.n_cluster = n_cluster
             if self.clustering_method == "kmeans":
-                clusters = keamns(feature_lists, n_clusters=self.n_cluster, do_normalize=True)
+                clusters = kmeans(feature_lists, n_clusters=self.n_cluster, do_normalize=True)
             else:
                 clusters = finch(feature_lists, finch_step=1, finch_dis=self.max_dis, metric="cosine", do_normalize=True)
             id_groups = self.clustering(clusters, current_client_list)
