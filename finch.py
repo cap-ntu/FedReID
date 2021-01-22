@@ -103,7 +103,7 @@ def req_numclust(c, data, req_clust, distance):
     return c_
 
 
-def FINCH(data, initial_rank=None, req_clust=None, distance='cosine', verbose=True):
+def FINCH(data, min_sim=None, initial_rank=None, req_clust=None, distance='cosine', verbose=True):
     """ FINCH clustering algorithm.
     :param data: Input matrix with features in rows.
     :param initial_rank: Nx1 first integer neighbor indices (optional).
@@ -126,7 +126,7 @@ def FINCH(data, initial_rank=None, req_clust=None, distance='cosine', verbose=Tr
     # Cast input data to float32
     data = data.astype(np.float32)
 
-    min_sim = None
+    # min_sim = None
     adj, orig_dist = clust_rank(data, initial_rank, distance)
     initial_rank = None
     group, num_clust = get_clust(adj, [], min_sim)

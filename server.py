@@ -12,7 +12,9 @@ from data_utils import ImageDataset
 import random
 import torch.optim as optim
 from torchvision import datasets
-from finch import FINCH
+# from finch import FINCH
+from finch_dis import finch
+from kmeans import keamns
 from evaluate import testing_model
 
 def add_model(dst_model, src_model, dst_no_data, src_no_data):
@@ -54,7 +56,9 @@ def aggregate_models(models, weights):
 
 
 class Server():
-    def __init__(self, clients, data, device, project_dir, model_name, num_of_clients, lr, drop_rate, stride, multiple_scale, clustering=False):
+    def __init__(self, clients, data, device, project_dir, model_name, num_of_clients, lr,
+                 drop_rate, stride, multiple_scale, clustering=False, clustering_method="finch",
+                 max_distance=2, n_cluster=2):
         self.project_dir = project_dir
         self.data = data
         self.device = device
@@ -80,6 +84,10 @@ class Server():
         self.cdw = None
         self.clients_using = None
         self.clients_weights = None
+        self.clustering_method = clustering_method
+        self.max_dis = max_distance
+        self.n_cluster = n_cluster
+
 
 
     def train(self, epoch, cdw, use_cuda):
@@ -112,8 +120,13 @@ class Server():
             for i in current_client_list:
                 feature_lists.append(self.clients[i].generate_custom_data_feature(inputs).cpu().detach().numpy())
             feature_lists = np.array(feature_lists)
-            c, num_clust, _ = FINCH(feature_lists)
-            id_groups = self.clustering(c, current_client_list)
+            # c, num_clust, _ = FINCH(feature_lists, min_sim=self.max_dis)
+            # self.clustering_method, self.max_dis, self.n_cluster = n_cluster
+            if self.clustering_method == "kmeans":
+                clusters = keamns(feature_lists, n_clusters=self.n_cluster, do_normalize=True)
+            else:
+                clusters = finch(feature_lists, finch_step=1, finch_dis=self.max_dis, metric="cosine", do_normalize=True)
+            id_groups = self.clustering(clusters, current_client_list)
             print("id_groups", id_groups)
 
 
@@ -294,10 +307,10 @@ class Server():
         id_groups = {}  # dict.fromkeys([i for i in range(num_of_cluster[0])],[])
         assert len(indexs) == len(client_list)
         for i in range(len(client_list)):
-            if indexs[i][0] not in id_groups.keys():
-                id_groups[indexs[i][0]] = [client_list[i]]
+            if indexs[i] not in id_groups.keys():
+                id_groups[indexs[i]] = [client_list[i]]
             else:
-                id_groups[indexs[i][0]].append(client_list[i])
+                id_groups[indexs[i]].append(client_list[i])
         return id_groups
 
 

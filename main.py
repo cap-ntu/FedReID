@@ -62,9 +62,12 @@ parser.add_argument('--kd', action='store_true', help='apply knowledge distillat
 parser.add_argument('--kd_method', default='cluster', type=str, help='whole or cluster')
 parser.add_argument('--regularization', action='store_true', help='use regularization during distillation, default false' )
 parser.add_argument('--clustering', action='store_true', help='use clustering to aggregate models, fault false')
+parser.add_argument('--clustering_method', default='finch', type=str, help='method used for clustering, finch or kmeans')
+parser.add_argument('--max_distance', default=0.9, type=float, help='maximum distance in finch algorithm')
+parser.add_argument('--n_cluster', default=2, type=float, help='number of cluster in Kmeans')
 
 
-def save_checkpoint(server, clients, client_list,cpk_dir, epoch):
+def save_checkpoint(server, clients, client_list, cpk_dir, epoch):
     torch.save({
         'epoch': epoch,
         'server_state_dict': server.federated_model.state_dict(),
@@ -109,8 +112,15 @@ def train():
 
     kd_method = args.kd_method
     assert (kd_method == 'whole' or kd_method == 'cluster')
+    if args.clustering:
+        if args.clustering_method == "kmeans":
+            cluster_description = "kmeans_{}".format(args.n_cluster)
+        else:
+            cluster_description = "finch_{}".format(args.max_distance)
+    else:
+        cluster_description = "No cluster"
 
-    cpk_dir = "checkpoints/{}_{}_{}_{}_{}".format(clu, cdw, kd, kd_method, reg)
+    cpk_dir = "checkpoints/{}_{}_{}_{}_{}_{}".format(clu, cdw, kd, kd_method, reg, cluster_description)
     cpk_dir = os.path.join(args.project_dir, cpk_dir)
     if not os.path.isdir(cpk_dir):
         os.makedirs(cpk_dir)
@@ -151,7 +161,11 @@ def train():
         args.drop_rate, 
         args.stride, 
         args.multiple_scale,
-        args.clustering)
+        args.clustering,
+        args.clustering_method,
+        args.max_distance,
+        args.n_cluster
+        )
 
     if epoch != 0:
         print("======= loading checkpoint, epoch: {}".format(epoch))
