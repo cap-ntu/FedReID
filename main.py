@@ -164,8 +164,7 @@ def train():
         args.clustering,
         args.clustering_method,
         args.max_distance,
-        args.n_cluster
-        )
+        args.n_cluster)
 
     if epoch != 0:
         print("======= loading checkpoint, epoch: {}".format(epoch))

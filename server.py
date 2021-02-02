@@ -1,6 +1,6 @@
 import os
 import math
-import json
+import random
 import matplotlib.pyplot as plt
 from utils import get_model, extract_feature
 import torch.nn as nn
@@ -9,7 +9,6 @@ import scipy.io
 import copy
 import numpy as np
 from data_utils import ImageDataset
-import random
 import torch.optim as optim
 from torchvision import datasets
 # from finch import FINCH
@@ -215,7 +214,7 @@ class Server():
             file_path = os.path.join(self.project_dir,
                                      'model',
                                      self.model_name,
-                                     'pytorch_result_{}.mat'.format(dataset))
+                                     'pytorch_result_{}_{}.mat'.format(dataset, random.randint(0, 100000000)))
             scipy.io.savemat(file_path, result)
                         
             print(self.model_name)
