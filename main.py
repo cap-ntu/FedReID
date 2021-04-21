@@ -92,7 +92,10 @@ def train():
         args.stride,
         args.multiple_scale)
 
-    dir_name = os.path.join(args.project_dir, 'model', args.model_name)
+    dir_name = os.path.join(args.project_dir, 'model')
+    if not os.path.isdir(dir_name):
+        os.mkdir(dir_name)
+    dir_name = os.path.join(dir_name, args.model_name)
     if not os.path.isdir(dir_name):
         os.mkdir(dir_name)
 
