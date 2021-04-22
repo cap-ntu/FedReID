@@ -97,7 +97,7 @@ def train():
     save_path = os.path.join(args.project_dir, 'model')
     if not os.path.isdir(save_path):
         os.mkdir(save_path)
-    save_path = os.path.join(save_path, "{}_{}".format(args.model_name, time.time()))
+    save_path = os.path.join(save_path, "{}_{}".format(args.model_name, args.rounds))
     if not os.path.isdir(save_path):
         os.mkdir(save_path)
 
