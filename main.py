@@ -5,16 +5,17 @@ import argparse
 import multiprocessing as mp
 import os
 import sys
+import time
 
 import matplotlib
 import torch
 
-matplotlib.use('agg')
 from client import Client
+from data_utils import Data
 from server import Server
 from utils import set_random_seed
-from data_utils import Data
 
+matplotlib.use('agg')
 mp.set_start_method('spawn', force=True)
 sys.setrecursionlimit(10000)
 version = torch.__version__
@@ -36,6 +37,7 @@ parser.add_argument('--drop_rate', default=0.5, type=float, help='drop rate')
 parser.add_argument('--local_epoch', default=1, type=int, help='number of local epochs')
 parser.add_argument('--batch_size', default=32, type=int, help='batch size')
 parser.add_argument('--num_of_clients', default=9, type=int, help='number of clients')
+parser.add_argument('--rounds', default=300, type=int, help='training rounds')
 
 # arguments for data transformation
 parser.add_argument('--erasing_p', default=0, type=float, help='Random Erasing probability, in [0,1]')
@@ -92,27 +94,25 @@ def train():
         args.stride,
         args.multiple_scale)
 
-    dir_name = os.path.join(args.project_dir, 'model')
-    if not os.path.isdir(dir_name):
-        os.mkdir(dir_name)
-    dir_name = os.path.join(dir_name, args.model_name)
-    if not os.path.isdir(dir_name):
-        os.mkdir(dir_name)
+    save_path = os.path.join(args.project_dir, 'model')
+    if not os.path.isdir(save_path):
+        os.mkdir(save_path)
+    save_path = os.path.join(save_path, "{}_{}".format(args.model_name, time.time()))
+    if not os.path.isdir(save_path):
+        os.mkdir(save_path)
 
     print("=====training start!========")
-    rounds = 800
-    for i in range(rounds):
+    for i in range(args.rounds):
         print('=' * 10)
         print("Round Number {}".format(i))
         print('=' * 10)
         server.train(i, args.cdw, use_cuda)
-        save_path = os.path.join(dir_name, 'federated_model.pth')
+        save_path = os.path.join(save_path, 'federated_model.pth')
         torch.save(server.federated_model.cpu().state_dict(), save_path)
         if (i + 1) % 10 == 0:
-            server.test(use_cuda)
             if args.kd:
                 server.knowledge_distillation(args.regularization)
-                server.test(use_cuda)
+            server.test(use_cuda, save_path)
         server.draw_curve()
 
 
