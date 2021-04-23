@@ -94,12 +94,12 @@ def train():
         args.stride,
         args.multiple_scale)
 
-    save_path = os.path.join(args.project_dir, 'model')
-    if not os.path.isdir(save_path):
-        os.mkdir(save_path)
-    save_path = os.path.join(save_path, "{}_{}".format(args.model_name, args.rounds))
-    if not os.path.isdir(save_path):
-        os.mkdir(save_path)
+    save_dir = os.path.join(args.project_dir, 'model')
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
+    save_dir = os.path.join(save_dir, "{}_{}".format(args.model_name, args.rounds))
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
 
     print("=====training start!========")
     for i in range(args.rounds):
@@ -107,7 +107,7 @@ def train():
         print("Round Number {}".format(i))
         print('=' * 10)
         server.train(i, args.cdw, use_cuda)
-        save_path = os.path.join(save_path, 'federated_model.pth')
+        save_path = os.path.join(save_dir, 'federated_model.pth')
         torch.save(server.federated_model.cpu().state_dict(), save_path)
         if (i + 1) % 10 == 0:
             if args.kd:
