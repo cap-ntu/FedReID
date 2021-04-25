@@ -112,7 +112,7 @@ def train():
         if (i + 1) % 10 == 0:
             if args.kd:
                 server.knowledge_distillation(args.regularization)
-            server.test(use_cuda, save_path)
+            server.test(use_cuda, save_dir)
         server.draw_curve()
 
 
