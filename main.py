@@ -120,7 +120,8 @@ def train():
     else:
         cluster_description = "No cluster"
 
-    cpk_dir = "checkpoints/{}_{}_{}_{}_{}_{}".format(clu, cdw, kd, kd_method, reg, cluster_description)
+    cpk_dir = "checkpoints/{}_{}_{}_{}_{}_{}_{}".format(clu, cdw, kd, kd_method, reg,
+                                                        cluster_description, args.experiment_index)
     cpk_dir = os.path.join(args.project_dir, cpk_dir)
     if not os.path.isdir(cpk_dir):
         os.makedirs(cpk_dir)
