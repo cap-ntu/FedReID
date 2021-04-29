@@ -91,7 +91,8 @@ def load_checkpoint(path):
 def train():
     args = parser.parse_args()
     print(args)
-
+    args.datasets = "cuhk01,viper,prid"
+    args.num_of_clients = 3
     if args.clustering:
         clu = "clu"
     else:
@@ -118,9 +119,10 @@ def train():
         else:
             cluster_description = "finch_{}".format(args.max_distance)
     else:
-        cluster_description = "No cluster"
+        cluster_description = "No_cluster"
 
-    cpk_dir = "checkpoints/{}_{}_{}_{}_{}_{}".format(clu, cdw, kd, kd_method, reg, cluster_description)
+    cpk_dir = "checkpoints/{}_{}_{}_{}_{}_{}_{}".format(clu, cdw, kd, kd_method, reg,
+                                                        cluster_description, args.experiment_index)
     cpk_dir = os.path.join(args.project_dir, cpk_dir)
     if not os.path.isdir(cpk_dir):
         os.makedirs(cpk_dir)
@@ -179,7 +181,8 @@ def train():
         print("all models loaded, training from {}".format(epoch))
 
     print("=====training start!========")
-    rounds = 800
+    rounds = 500
+    rounds = rounds // args.local_epoch
     for i in range(epoch, rounds):
         save_checkpoint(server, clients, data.client_list, cpk_dir, i)
         print('='*10)
