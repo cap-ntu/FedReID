@@ -180,7 +180,8 @@ def train():
         print("all models loaded, training from {}".format(epoch))
 
     print("=====training start!========")
-    rounds = 800
+    rounds = 500
+    rounds = rounds // args.local_epoch
     for i in range(epoch, rounds):
         save_checkpoint(server, clients, data.client_list, cpk_dir, i)
         print('='*10)
