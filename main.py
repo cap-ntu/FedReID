@@ -55,7 +55,7 @@ parser.add_argument('--multiple_scale',default='1', type=str,help='multiple_scal
 parser.add_argument('--test_dir',default='all',type=str, help='./test_data')
 
 parser.add_argument('--resume_epoch', default=0, type=int, help='resume from which epoch, if 0, no resume')
-
+parser.add_argument('--experiment_index', default=0, type=int, help='index of training time')
 # arguments for optimization
 parser.add_argument('--cdw', action='store_true', help='use cosine distance weight for model aggregation, default false' )
 parser.add_argument('--kd', action='store_true', help='apply knowledge distillation, default false')
