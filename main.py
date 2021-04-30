@@ -118,7 +118,7 @@ def train():
         else:
             cluster_description = "finch_{}".format(args.max_distance)
     else:
-        cluster_description = "No cluster"
+        cluster_description = "No_cluster"
 
     cpk_dir = "checkpoints/{}_{}_{}_{}_{}_{}_{}".format(clu, cdw, kd, kd_method, reg,
                                                         cluster_description, args.experiment_index)
