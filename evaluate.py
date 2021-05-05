@@ -73,9 +73,9 @@ def testing_model(file_path, dataset):
     gallery_feature = torch.FloatTensor(result['gallery_f'])
     gallery_cam = result['gallery_cam'][0]
     gallery_label = result['gallery_label'][0]
-    print(query_feature[:3])
-    print(query_cam[:3])
-    print(query_label[:3])
+    print(type(query_feature),query_feature[:3])
+    print(type(query_cam),query_cam[:3])
+    print(type(query_label),query_label[:3])
 
     query_feature = query_feature.cuda()
     gallery_feature = gallery_feature.cuda()
