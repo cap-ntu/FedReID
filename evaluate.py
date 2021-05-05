@@ -61,8 +61,8 @@ def compute_mAP(index, good_index, junk_index):
     return ap, cmc
 
 
-def testing_model(file_path, dataset):
-    result = scipy.io.loadmat(file_path)
+def testing_model(result, dataset):
+    # result = scipy.io.loadmat(file_path)
 
     query_feature = torch.FloatTensor(result['query_f'])
     query_cam = result['query_cam'][0]

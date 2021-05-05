@@ -210,16 +210,19 @@ class Server():
                 'gallery_cam': self.data.gallery_meta[dataset]['cameras'],
                 'query_f': query_feature.numpy(),
                 'query_label': self.data.query_meta[dataset]['labels'],
-                'query_cam': self.data.query_meta[dataset]['cameras']}
-            file_path = os.path.join(self.project_dir,
-                                     'model',
-                                     self.model_name,
-                                     'pytorch_result_{}_{}.mat'.format(dataset, random.randint(0, 100000000)))
-            scipy.io.savemat(file_path, result)
+                'query_cam': self.data.query_meta[dataset]['cameras']
+            }
+            for i in result:
+                print(i, result[i].shape)
+            # file_path = os.path.join(self.project_dir,
+            #                          'model',
+            #                          self.model_name,
+            #                          'pytorch_result_{}_{}.mat'.format(dataset, random.randint(0, 100000000)))
+            # scipy.io.savemat(file_path, result)
                         
             print(self.model_name)
             print(dataset)
-            testing_model(file_path, dataset)
+            testing_model(result, dataset)
             # os.system('python evaluate.py --result_dir {} --dataset {}'.format(os.path.join(self.project_dir, 'model', self.model_name), dataset))
 
     def knowledge_distillation(self, regularization, kd_method):
