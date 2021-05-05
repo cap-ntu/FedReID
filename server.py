@@ -212,14 +212,15 @@ class Server():
                 'query_label': self.data.query_meta[dataset]['labels'],
                 'query_cam': self.data.query_meta[dataset]['cameras']
             }
+            print("====== before loading =======")
             for i in result:
-                print(i, np.array(result[i]).shape)
+                print(i, np.array(result[i]).shape, result[i][:3])
             file_path = os.path.join(self.project_dir,
                                      'model',
                                      self.model_name,
                                      'pytorch_result_{}_{}.mat'.format(dataset, random.randint(0, 100000000)))
             scipy.io.savemat(file_path, result)
-                        
+
             print(self.model_name)
             print(dataset)
             testing_model(file_path, dataset)

@@ -63,15 +63,19 @@ def compute_mAP(index, good_index, junk_index):
 
 def testing_model(file_path, dataset):
     result = scipy.io.loadmat(file_path)
+    print("========= after loading ==========")
     for i in result:
-        print("========= after loading ==========")
         print(i, np.array(result[i]).shape)
+
     query_feature = torch.FloatTensor(result['query_f'])
     query_cam = result['query_cam'][0]
     query_label = result['query_label'][0]
     gallery_feature = torch.FloatTensor(result['gallery_f'])
     gallery_cam = result['gallery_cam'][0]
     gallery_label = result['gallery_label'][0]
+    print(query_feature[:3])
+    print(query_cam[:3])
+    print(query_label[:3])
 
     query_feature = query_feature.cuda()
     gallery_feature = gallery_feature.cuda()
