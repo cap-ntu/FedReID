@@ -213,7 +213,7 @@ class Server():
                 'query_cam': self.data.query_meta[dataset]['cameras']
             }
             for i in result:
-                print(i, result[i].shape)
+                print(i, np.array(result[i]).shape)
             # file_path = os.path.join(self.project_dir,
             #                          'model',
             #                          self.model_name,
