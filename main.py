@@ -92,6 +92,7 @@ def train():
     args = parser.parse_args()
     print(args)
     args.datasets = "cuhk01,viper,prid"
+    args.num_of_clients = 3
     if args.clustering:
         clu = "clu"
     else:
