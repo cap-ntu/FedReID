@@ -109,7 +109,7 @@ class Server():
             loss.append(self.clients[i].get_train_loss())
             data_sizes.append(self.clients[i].get_data_sizes())
 
-        if (epoch + 1) % 10 == 0:
+        if (epoch + 1) % 1 == 0:
             print("before aggregation, local testing")
             self.test(use_cuda)
         if self.use_clustering:
