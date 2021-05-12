@@ -8,7 +8,7 @@ Pillow==8.1.1
 pretrainedmodels==0.7.4
 pyparsing==2.4.7
 python-dateutil==2.8.1
-PyYAML==5.3.1
+PyYAML==5.4
 scipy==1.4.1
 six==1.14.0
 torch==1.5.0
