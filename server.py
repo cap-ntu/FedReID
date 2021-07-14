@@ -159,8 +159,7 @@ class Server:
 
             scipy.io.savemat(os.path.join(save_path, 'pytorch_result.mat'), result)
 
-            os.system('python evaluate.py --result_dir {} --dataset {}'.format(
-                os.path.join(self.project_dir, 'model', self.model_name), dataset))
+            os.system('python evaluate.py --result_dir {} --dataset {}'.format(save_path, dataset))
 
     def knowledge_distillation(self, regularization):
         MSEloss = nn.MSELoss().to(self.device)
