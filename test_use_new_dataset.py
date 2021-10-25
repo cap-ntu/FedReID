@@ -6,6 +6,7 @@ import json
 import torch
 from random_erasing import RandomErasing
 from utils import get_model, extract_feature
+from evaluate import testing_model
 
 class ImageDataset(Dataset):
     def __init__(self, imgs,  transform = None):
@@ -65,20 +66,27 @@ cpk_epoch, server_state_dict, client_list, client_classifier, client_model = loa
 model.load_state_dict(server_state_dict)
 
 from torch.autograd import Variable
+def fliplr(img):
+    """flip horizontal
+    """
+    inv_idx = torch.arange(img.size(3)-1,-1,-1).long()  # N x C x H x W
+    img_flip = img.index_select(3,inv_idx)
+    return img_flip
 def extract_feature(model, dataloaders, ms):
     features = torch.FloatTensor()
     for data in dataloaders:
         img, label = data
         n, c, h, w = img.size()
-        ff = torch.FloatTensor(n, 512).zero_().cuda()
+        ff = torch.FloatTensor(n, 512).zero_() # cuda
 
         for i in range(2):
             if(i==1):
                 img = fliplr(img)
-            input_img = Variable(img.cuda())
+            input_img = Variable(img) # cuda
             for scale in ms:
                 if scale != 1:
                     # bicubic is only  available in pytorch>= 1.1
+                    print(input_img)
                     input_img = nn.functional.interpolate(input_img, scale_factor=scale, mode='bicubic', align_corners=False)
                 outputs = model(input_img)
                 ff += outputs
@@ -90,7 +98,52 @@ def extract_feature(model, dataloaders, ms):
     return features
 
 with torch.no_grad():
-    gallery_feature = extract_feature(model, test_loaders[dataset]['gallery'], "1")
-    query_feature = extract_feature(model, test_loaders[dataset]['query'], "1")
+    gallery_feature = extract_feature(model, test_loaders[dataset]['gallery'], [1])
+    query_feature = extract_feature(model, test_loaders[dataset]['query'], [1])
 
-print(gallery_feature.shape)
+def get_camera_ids(img_paths):
+    """get camera id and labels by image path
+    """
+    camera_ids = []
+    labels = []
+    camera = 0 if 'gallery' in img_paths else 1
+    for path, v in img_paths:
+        filename = os.path.basename(path)
+        
+        label = filename[0:4]
+
+        if label[0:2]=='-1':
+            labels.append(-1)
+        else:
+            labels.append(int(label))
+        
+        camera_ids.append(camera)
+    return camera_ids, labels
+gallery_meta = {}
+query_meta = {}
+gallery_cameras, gallery_labels = get_camera_ids(gallery_dataset.imgs)
+gallery_meta[dataset] = {
+    'sizes':  len(gallery_dataset),
+    'cameras': gallery_cameras,
+    'labels': gallery_labels
+}
+
+query_cameras, query_labels = get_camera_ids(query_dataset.imgs)
+query_meta[dataset] = {
+    'sizes':  len(query_dataset),
+    'cameras': query_cameras,
+    'labels': query_labels
+}
+
+result = {
+    'gallery_f': gallery_feature.numpy(),
+    'gallery_label': data.gallery_meta[dataset]['labels'],
+    'gallery_cam': data.gallery_meta[dataset]['cameras'],
+    'query_f': query_feature.numpy(),
+    'query_label': data.query_meta[dataset]['labels'],
+    'query_cam': data.query_meta[dataset]['cameras']
+}
+
+
+print(dataset)
+testing_model(result, dataset)
