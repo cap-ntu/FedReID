@@ -1,5 +1,5 @@
 # FedReID
-Code for ACMMM 2020 oral paper - **[Performance Optimization for Federated Person Re-identification via Benchmark Analysis](https://dl.acm.org/doi/10.1145/3394171.3413814)**
+Code for ACMMM 2020 oral paper - **[Performance Optimization for Federated Person Re-identification via Benchmark Analysis](https://arxiv.org/abs/2008.11560)**
 
 Personal re-identification is an important computer vision task, but its development is constrained by the increasing privacy concerns. Federated learning is a privacy-preserving machine learning technique that learns a shared model across decentralized clients. In this work, we implement federated learning to person re-identification (**FedReID**) and optimize its performance affected by **statistical heterogeneity** in the real-world scenario. 
 
@@ -14,10 +14,20 @@ Algorithm: Federated Partial Averaging (FedPav)
     ```
 
 ## Datasets preparation
+
+> **🎉 We are now releasing the processed datasets.** (April, 2022)
+>
+> Please [email us](weiming001@e.ntu.edu.sg) to request for the datasets with:
+> 1. A short self-introduction.
+> 2. The purposes of using these datasets.
+>
+> *⚠️ Further distribution of the datasets are prohibited.*
+
 **We use 9 popular ReID datasets for the benchmark.**
 <img src="images/datasets.png" width="700">
 
 
+### Dataset Preprocess From Scratch
 
 You can obtain the datasets from [awesome-reid-dataset](https://github.com/NEU-Gou/awesome-reid-dataset)
 
