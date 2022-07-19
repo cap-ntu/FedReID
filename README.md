@@ -17,7 +17,7 @@ Algorithm: Federated Partial Averaging (FedPav)
 
 > **🎉 We are now releasing the processed datasets.** (April, 2022)
 >
-> Please [email us](weiming001@e.ntu.edu.sg) to request for the datasets with:
+> Please [email us](weiming001@e.ntu.edu.sg) (cc [this email](wingalong@gmail.com) in case it is filtered as spam) th to request for the datasets with:
 > 1. A short self-introduction.
 > 2. The purposes of using these datasets.
 >
