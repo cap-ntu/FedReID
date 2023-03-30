@@ -85,6 +85,17 @@ Remember to save the log file for later use!
   pages={955--963},
   year={2020}
 }
+
+@article{zhuang2023fedreid,
+  title={Optimizing performance of federated person re-identification: Benchmarking and analysis},
+  author={Zhuang, Weiming and Gan, Xin and Wen, Yonggang and Zhang, Shuai},
+  journal={ACM Transactions on Multimedia Computing, Communications and Applications},
+  volume={19},
+  number={1s},
+  pages={1--18},
+  year={2023},
+  publisher={ACM New York, NY}
+}
 ```
 
 ## Maintainers
