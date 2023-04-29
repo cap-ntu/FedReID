@@ -8,7 +8,7 @@ from torch.autograd import Variable
 import copy
 from optimization import Optimization
 class Client():
-    def __init__(self, cid, data, device, project_dir, model_name, local_epoch, lr, batch_size, drop_rate, stride):
+    def __init__(self, cid, data, device, project_dir, model_name, local_epoch, lr, batch_size, drop_rate, stride, clustering=False):
         self.cid = cid
         self.project_dir = project_dir
         self.model_name = model_name
@@ -21,25 +21,30 @@ class Client():
         self.dataset_sizes = self.data.train_dataset_sizes[cid]
         self.train_loader = self.data.train_loaders[cid]
 
-        self.full_model = get_model(self.data.train_class_sizes[cid], drop_rate, stride)
-        self.classifier = self.full_model.classifier.classifier
-        self.full_model.classifier.classifier = nn.Sequential()
-        self.model = self.full_model
-        self.distance=0
+        self.model = get_model(self.data.train_class_sizes[cid], drop_rate, stride)
+        self.classifier = copy.deepcopy(self.model.classifier.classifier)
+        self.model.classifier.classifier = nn.Sequential()
+        self.distance = 0
         self.optimization = Optimization(self.train_loader, self.device)
+        self.use_clustering = clustering
         # print("class name size",class_names_size[cid])
 
-    def train(self, federated_model, use_cuda):
+    def train(self, federated_model=None, use_cuda=False):
         self.y_err = []
         self.y_loss = []
-
-        self.model.load_state_dict(federated_model.state_dict())
+        if self.use_clustering:
+            print("using clustering, model is set before")
+            assert federated_model is None
+            # self.model.classifier.classifier = nn.Sequential()
+            federated_model = copy.deepcopy(self.model)
+        else:
+            self.model.load_state_dict(federated_model.state_dict())
         self.model.classifier.classifier = self.classifier
         self.old_classifier = copy.deepcopy(self.classifier)
         self.model = self.model.to(self.device)
-
+        self.model.train(True)
         optimizer = get_optimizer(self.model, self.lr)
-        scheduler = lr_scheduler.StepLR(optimizer, step_size=40, gamma=0.1)
+        # scheduler = lr_scheduler.StepLR(optimizer, step_size=40, gamma=0.1)
         
         criterion = nn.CrossEntropyLoss()
 
@@ -50,8 +55,7 @@ class Client():
             print('Epoch {}/{}'.format(epoch, self.local_epoch - 1))
             print('-' * 10)
 
-            scheduler.step()
-            self.model.train(True)
+            # scheduler.step()
             running_loss = 0.0
             running_corrects = 0.0
             
@@ -60,12 +64,12 @@ class Client():
                 b, c, h, w = inputs.shape
                 if b < self.batch_size:
                     continue
-                if use_cuda:
-                    inputs = Variable(inputs.cuda().detach())
-                    labels = Variable(labels.cuda().detach())
-                else:
-                    inputs, labels = Variable(inputs), Variable(labels)
-                
+                # if use_cuda:
+                #     inputs = Variable(inputs.cuda().detach())
+                #     labels = Variable(labels.cuda().detach())
+                # else:
+                #     inputs, labels = Variable(inputs), Variable(labels)
+                inputs, labels = inputs.to(self.device), labels.to(self.device)
                 optimizer.zero_grad()
 
                 outputs = self.model(inputs)
@@ -106,6 +110,9 @@ class Client():
     def generate_soft_label(self, x, regularization):
         return self.optimization.kd_generate_soft_label(self.model, x, regularization)
 
+    def generate_custom_data_feature(self, inputs):
+        return self.optimization.generate_custom_data_feature(self.model, inputs)
+
     def get_model(self):
         return self.model
 
@@ -117,3 +124,7 @@ class Client():
 
     def get_cos_distance_weight(self):
         return self.distance
+
+    def set_model(self, model):
+        self.model = copy.deepcopy(model)
+
